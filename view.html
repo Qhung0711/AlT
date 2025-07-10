@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Xem ảnh lớn</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .image-container {
+      width: 95vw;
+      height: 70vh;
+      overflow: auto;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-overflow-scrolling: touch;
+    }
+    .zoomable-image {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      transition: transform 0.1s ease;
+      transform-origin: center;
+      touch-action: manipulation;
+    }
+    .zoom-info {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <div class="view-container">
+    <div id="imageArea"></div>
+    <div id="buttonArea" style="display: flex; gap: 12px; margin-top: 18px; flex-wrap: wrap; justify-content: center;"></div>
+    <div id="errorMsg" style="color: red; margin-top: 20px;"></div>
+  </div>
+  <script>
+    // Kiểm tra trạng thái đăng nhập
+    const isLoggedIn = sessionStorage.getItem("isLoggedIn");
+    if (isLoggedIn !== "true") {
+      window.location.href = "index.html?img=" + encodeURIComponent(new URLSearchParams(window.location.search).get('img') || '');
+    }
+    
+    function getQueryParam(name) {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name);
+    }
+    const imgName = getQueryParam('img');
+    const imageArea = document.getElementById('imageArea');
+    const buttonArea = document.getElementById('buttonArea');
+    const errorMsg = document.getElementById('errorMsg');
+    if (imgName) {
+      // Tạo container cho ảnh với thanh cuộn
+      const imageContainer = document.createElement('div');
+      imageContainer.className = 'image-container';
+      imageArea.appendChild(imageContainer);
+
+      // Ảnh có thể zoom
+      const img = document.createElement('img');
+      img.src = `images/${imgName}`;
+      img.className = 'zoomable-image';
+      img.alt = imgName;
+      img.onerror = function() {
+        errorMsg.textContent = 'Không tìm thấy ảnh hoặc ảnh bị lỗi!';
+        img.style.display = 'none';
+      };
+      imageContainer.appendChild(img);
+
+      // Biến để theo dõi mức zoom
+      let currentZoom = 1;
+      const minZoom = 0.1;
+      const maxZoom = 10;
+
+      // Tạo thông tin zoom
+      const zoomInfo = document.createElement('div');
+      zoomInfo.className = 'zoom-info';
+      zoomInfo.textContent = 'Zoom: 100%';
+      document.body.appendChild(zoomInfo);
+
+      // Cập nhật thông tin zoom
+      function updateZoomInfo() {
+        zoomInfo.textContent = `Zoom: ${Math.round(currentZoom * 100)}%`;
+      }
+
+      // Xử lý zoom bằng chuột lăn (desktop)
+      imageContainer.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        
+        const delta = e.deltaY > 0 ? 0.9 : 1.1;
+        const newZoom = Math.max(minZoom, Math.min(maxZoom, currentZoom * delta));
+        
+        if (newZoom !== currentZoom) {
+          currentZoom = newZoom;
+          img.style.transform = `scale(${currentZoom})`;
+          updateZoomInfo();
+        }
+      });
+
+      // Touch gestures cho mobile
+      let initialDistance = 0;
+      let initialZoom = 1;
+
+      imageContainer.addEventListener('touchstart', function(e) {
+        if (e.touches.length === 2) {
+          // Pinch to zoom
+          initialDistance = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+          initialZoom = currentZoom;
+        }
+      });
+
+      imageContainer.addEventListener('touchmove', function(e) {
+        if (e.touches.length === 2) {
+          e.preventDefault();
+          
+          const currentDistance = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+          
+          const scale = currentDistance / initialDistance;
+          const newZoom = Math.max(minZoom, Math.min(maxZoom, initialZoom * scale));
+          
+          if (newZoom !== currentZoom) {
+            currentZoom = newZoom;
+            img.style.transform = `scale(${currentZoom})`;
+            updateZoomInfo();
+          }
+        }
+      });
+
+      // Nút quay lại
+      const backBtn = document.createElement('button');
+      backBtn.onclick = function() {
+        history.back();
+      };
+      backBtn.textContent = 'Quay lại';
+      backBtn.className = 'download-btn';
+      backBtn.style.background = '#888';
+      buttonArea.appendChild(backBtn);
+      
+      // Nút tải về
+      const downloadBtn = document.createElement('a');
+      downloadBtn.href = img.src;
+      downloadBtn.download = imgName;
+      downloadBtn.textContent = 'Tải về';
+      downloadBtn.className = 'download-btn';
+      buttonArea.appendChild(downloadBtn);
+      
+      // Nút reset zoom
+      const resetBtn = document.createElement('button');
+      resetBtn.onclick = function() {
+        currentZoom = 1;
+        img.style.transform = `scale(${currentZoom})`;
+        imageContainer.scrollTo(0, 0);
+        updateZoomInfo();
+      };
+      resetBtn.textContent = 'Reset Zoom';
+      resetBtn.className = 'download-btn';
+      resetBtn.style.background = '#28a745';
+      buttonArea.appendChild(resetBtn);
+
+      // Nút zoom in/out cho mobile
+      const zoomInBtn = document.createElement('button');
+      zoomInBtn.onclick = function() {
+        const newZoom = Math.min(maxZoom, currentZoom * 1.2);
+        if (newZoom !== currentZoom) {
+          currentZoom = newZoom;
+          img.style.transform = `scale(${currentZoom})`;
+          updateZoomInfo();
+        }
+      };
+      zoomInBtn.textContent = 'Zoom +';
+      zoomInBtn.className = 'download-btn';
+      zoomInBtn.style.background = '#ff9800';
+      buttonArea.appendChild(zoomInBtn);
+
+      const zoomOutBtn = document.createElement('button');
+      zoomOutBtn.onclick = function() {
+        const newZoom = Math.max(minZoom, currentZoom * 0.8);
+        if (newZoom !== currentZoom) {
+          currentZoom = newZoom;
+          img.style.transform = `scale(${currentZoom})`;
+          updateZoomInfo();
+        }
+      };
+      zoomOutBtn.textContent = 'Zoom -';
+      zoomOutBtn.className = 'download-btn';
+      zoomOutBtn.style.background = '#ff9800';
+      buttonArea.appendChild(zoomOutBtn);
+
+    } else {
+      errorMsg.textContent = 'Không có ảnh để hiển thị!';
+    }
+  </script>
+</body>
+</html> 

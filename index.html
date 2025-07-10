@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Gallery</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="login">
+    <!-- Form đăng nhập -->
+    <input type="password" id="pinInput" placeholder="Nhập mã PIN">
+    <button onclick="checkPIN()">Đăng nhập</button>
+    <div id="error" style="color: red;"></div>
+  </div>
+
+  <!-- Navigation sau khi đăng nhập -->
+  <div id="navigation" style="display: none; flex-direction: column; align-items: center; margin-top: 20px;">
+    <button id="showAllBtn">Xem tất cả ảnh</button>
+    <button id="showRandomBtn">Xem ngẫu nhiên 5 ảnh</button>
+  </div>
+
+  <!-- Gallery ảnh -->
+  <div id="gallery" style="display: none; flex-wrap: wrap;"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
