@@ -45,7 +45,6 @@
     <div id="buttonArea" style="display: flex; gap: 12px; margin-top: 18px; flex-wrap: wrap; justify-content: center;"></div>
     <div id="errorMsg" style="color: red; margin-top: 20px;"></div>
   </div>
-  <script src="image_data.js"></script>
   <script>
     // Kiểm tra trạng thái đăng nhập
     const isLoggedIn = sessionStorage.getItem("isLoggedIn");
@@ -69,14 +68,7 @@
 
       // Ảnh có thể zoom
       const img = document.createElement('img');
-      
-      // Sử dụng Base64 nếu có, nếu không thì dùng đường dẫn thông thường
-      if (typeof getImageData === 'function' && getImageData(imgName)) {
-        img.src = getImageData(imgName);
-      } else {
-        img.src = `images/${imgName}`;
-      }
-      
+      img.src = `images/${imgName}`;
       img.className = 'zoomable-image';
       img.alt = imgName;
       img.onerror = function() {
@@ -162,14 +154,7 @@
       
       // Nút tải về
       const downloadBtn = document.createElement('a');
-      
-      // Sử dụng Base64 nếu có, nếu không thì dùng đường dẫn thông thường
-      if (typeof getImageData === 'function' && getImageData(imgName)) {
-        downloadBtn.href = getImageData(imgName);
-      } else {
-        downloadBtn.href = img.src;
-      }
-      
+      downloadBtn.href = img.src;
       downloadBtn.download = imgName;
       downloadBtn.textContent = 'Tải về';
       downloadBtn.className = 'download-btn';

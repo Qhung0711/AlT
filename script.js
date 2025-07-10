@@ -69,8 +69,7 @@ function checkPIN() {
 }
 
 // Danh sách tên file ảnh thực tế
-// Sử dụng getImageNames() từ image_data.js nếu có, nếu không thì dùng danh sách cũ
-const imageNames = typeof getImageNames === 'function' ? getImageNames() : [
+const imageNames = [
   "IMG_2598.JPG", "IMG_2599.JPG", "IMG_2600.JPG", "IMG_2601.JPG", "IMG_2602.JPG", "IMG_2603.JPG", "IMG_2604.JPG",  "IMG_2605.JPG", 
   "IMG_2606.JPG", "IMG_2607.JPG", "IMG_2620.JPG", "IMG_2621.JPG", "IMG_2622.JPG", "IMG_2623.JPG", "IMG_2624.JPG", "IMG_2625.JPG", "IMG_2626.JPG", "IMG_2627.JPG",
   "IMG_2628.JPG", "IMG_2629.JPG",  "IMG_2630.JPG", "IMG_2631.JPG","IMG_2632.JPG", "IMG_2633.JPG", "IMG_2634.JPG",
@@ -155,14 +154,7 @@ function loadImagesWithPagination(imageList) {
   // Load ảnh cho trang hiện tại với tối ưu
   currentPageImages.forEach((imageName, index) => {
     const img = document.createElement("img");
-    
-    // Sử dụng Base64 nếu có, nếu không thì dùng đường dẫn thông thường
-    if (typeof getImageData === 'function' && getImageData(imageName)) {
-      img.src = getImageData(imageName);
-    } else {
-      img.src = `images/${imageName}`;
-    }
-    
+    img.src = `images/${imageName}`;
     img.alt = `Ảnh ${startIndex + index + 1}`;
     img.className = "thumbnail";
     img.style.cursor = "pointer";
