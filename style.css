@@ -5,6 +5,114 @@ body {
   font-family: Arial, sans-serif;
   background: #f5f5f5;
   min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark mode styles */
+body.dark-mode {
+  background: #1a1a1a;
+  color: #ffffff;
+}
+
+body.dark-mode #pinInput {
+  background: #333;
+  color: #fff;
+  border-color: #555;
+}
+
+body.dark-mode #pinInput::placeholder {
+  color: #aaa;
+}
+
+body.dark-mode #login button,
+body.dark-mode #navigation button {
+  background: #4a90e2;
+}
+
+body.dark-mode #login button:hover,
+body.dark-mode #navigation button:hover {
+  background: #357abd;
+}
+
+body.dark-mode .page-btn {
+  background: #333;
+  color: #fff;
+  border-color: #555;
+}
+
+body.dark-mode .page-btn:hover {
+  background: #444;
+  border-color: #666;
+}
+
+body.dark-mode .page-btn.active {
+  background: #4a90e2;
+  border-color: #4a90e2;
+}
+
+body.dark-mode .image-container {
+  border-color: #555;
+}
+
+body.dark-mode .download-btn {
+  background: #4a90e2;
+}
+
+body.dark-mode .download-btn:hover {
+  background: #357abd;
+}
+
+/* Theme toggle button styles */
+.nav-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.theme-toggle {
+  margin-top: 15px;
+}
+
+.theme-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  font-size: 14px;
+  background: #f0f0f0;
+  color: #333;
+  border: 2px solid #ddd;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+  justify-content: center;
+}
+
+.theme-btn:hover {
+  background: #e0e0e0;
+  border-color: #ccc;
+}
+
+body.dark-mode .theme-btn {
+  background: #333;
+  color: #fff;
+  border-color: #555;
+}
+
+body.dark-mode .theme-btn:hover {
+  background: #444;
+  border-color: #666;
+}
+
+.theme-icon {
+  font-size: 16px;
+}
+
+.theme-text {
+  font-weight: 500;
 }
 
 /* Login styles */
@@ -24,6 +132,7 @@ body {
   width: 250px;
   max-width: 90vw;
   text-align: center;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 #login button {
@@ -66,6 +175,14 @@ body {
 .thumbnail:hover {
   transform: scale(1.05); /* Giảm scale để mượt hơn */
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+
+body.dark-mode .thumbnail {
+  box-shadow: 0 2px 8px rgba(255,255,255,0.1);
+}
+
+body.dark-mode .thumbnail:hover {
+  box-shadow: 0 4px 16px rgba(255,255,255,0.2);
 }
 
 #navigation {
@@ -144,6 +261,7 @@ body {
   align-items: center;
   justify-content: center;
   -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  transition: border-color 0.3s ease;
 }
 
 .zoomable-image {
@@ -198,7 +316,7 @@ body {
   }
   
   .thumbnail {
-    width: 120px; /* Nhỏ hơn trên mobile */
+    width: 120px;
   }
   
   #navigation button {
@@ -214,30 +332,30 @@ body {
   }
   
   .image-container {
-    width: 98vw;
     height: 60vh;
   }
   
   .download-btn {
     padding: 10px 16px;
     font-size: 14px;
-    min-width: 80px;
   }
   
-  .view-container {
-    margin-top: 10px;
-    padding: 5px;
+  .theme-btn {
+    padding: 10px 16px;
+    font-size: 12px;
+    min-width: 100px;
   }
 }
 
 @media (max-width: 480px) {
   .thumbnail {
-    width: 100px; /* Còn nhỏ hơn nữa trên mobile nhỏ */
+    width: 100px;
   }
   
   #pinInput {
     width: 180px;
     padding: 10px;
+    font-size: 14px;
   }
   
   .page-btn {
@@ -248,6 +366,12 @@ body {
   
   .image-container {
     height: 50vh;
+  }
+  
+  .theme-btn {
+    padding: 8px 12px;
+    font-size: 11px;
+    min-width: 90px;
   }
 }
   

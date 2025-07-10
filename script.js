@@ -4,6 +4,52 @@ let currentPage = 1;
 let currentImageList = [];
 let isLoading = false; // Tránh spam click
 
+// Theme management
+let currentTheme = localStorage.getItem('theme') || 'light-mode';
+
+// Function to toggle theme
+function toggleTheme() {
+  const body = document.body;
+  const themeToggle = document.getElementById('themeToggle');
+  const themeIcon = themeToggle.querySelector('.theme-icon');
+  const themeText = themeToggle.querySelector('.theme-text');
+  
+  if (currentTheme === 'light-mode') {
+    currentTheme = 'dark-mode';
+    body.className = 'dark-mode';
+    themeIcon.textContent = '☀️';
+    themeText.textContent = 'Light Mode';
+  } else {
+    currentTheme = 'light-mode';
+    body.className = 'light-mode';
+    themeIcon.textContent = '🌙';
+    themeText.textContent = 'Dark Mode';
+  }
+  
+  localStorage.setItem('theme', currentTheme);
+}
+
+// Function to apply saved theme
+function applyTheme() {
+  const body = document.body;
+  const themeToggle = document.getElementById('themeToggle');
+  
+  if (themeToggle) {
+    const themeIcon = themeToggle.querySelector('.theme-icon');
+    const themeText = themeToggle.querySelector('.theme-text');
+    
+    body.className = currentTheme;
+    
+    if (currentTheme === 'dark-mode') {
+      themeIcon.textContent = '☀️';
+      themeText.textContent = 'Light Mode';
+    } else {
+      themeIcon.textContent = '🌙';
+      themeText.textContent = 'Dark Mode';
+    }
+  }
+}
+
 // Xóa trạng thái đăng nhập mỗi lần tải lại trang (chỉ khi refresh hoặc đóng tab)
 window.addEventListener("DOMContentLoaded", function() {
   sessionStorage.removeItem("isLoggedIn");
@@ -11,6 +57,15 @@ window.addEventListener("DOMContentLoaded", function() {
 
 // Kiểm tra trạng thái đăng nhập khi load trang
 document.addEventListener("DOMContentLoaded", function() {
+  // Apply saved theme
+  applyTheme();
+  
+  // Add theme toggle event listener
+  const themeToggle = document.getElementById('themeToggle');
+  if (themeToggle) {
+    themeToggle.addEventListener('click', toggleTheme);
+  }
+  
   const isLoggedIn = sessionStorage.getItem("isLoggedIn");
   // Lấy tham số img nếu có
   const urlParams = new URLSearchParams(window.location.search);

@@ -6,7 +6,7 @@
   <title>Gallery</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="light-mode">
   <div id="login">
     <!-- Form đăng nhập -->
     <input type="password" id="pinInput" placeholder="Nhập mã PIN">
@@ -16,8 +16,16 @@
 
   <!-- Navigation sau khi đăng nhập -->
   <div id="navigation" style="display: none; flex-direction: column; align-items: center; margin-top: 20px;">
-    <button id="showAllBtn">Xem tất cả ảnh</button>
-    <button id="showRandomBtn">Xem ngẫu nhiên 5 ảnh</button>
+    <div class="nav-buttons">
+      <button id="showAllBtn">Xem tất cả ảnh</button>
+      <button id="showRandomBtn">Xem ngẫu nhiên 5 ảnh</button>
+    </div>
+    <div class="theme-toggle">
+      <button id="themeToggle" class="theme-btn">
+        <span class="theme-icon">🌙</span>
+        <span class="theme-text">Dark Mode</span>
+      </button>
+    </div>
   </div>
 
   <!-- Gallery ảnh -->

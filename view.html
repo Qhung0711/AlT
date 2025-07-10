@@ -17,6 +17,7 @@
       align-items: center;
       justify-content: center;
       -webkit-overflow-scrolling: touch;
+      transition: border-color 0.3s ease;
     }
     .zoomable-image {
       max-width: 100%;
@@ -36,16 +37,39 @@
       border-radius: 20px;
       font-size: 12px;
       z-index: 1000;
+      transition: background-color 0.3s ease;
+    }
+    
+    /* Dark mode styles for view page */
+    body.dark-mode .zoom-info {
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+    }
+    
+    body.dark-mode #errorMsg {
+      color: #ff6b6b;
     }
   </style>
 </head>
-<body>
+<body class="light-mode">
   <div class="view-container">
     <div id="imageArea"></div>
     <div id="buttonArea" style="display: flex; gap: 12px; margin-top: 18px; flex-wrap: wrap; justify-content: center;"></div>
     <div id="errorMsg" style="color: red; margin-top: 20px;"></div>
   </div>
   <script>
+    // Theme management for view page
+    let currentTheme = localStorage.getItem('theme') || 'light-mode';
+    
+    // Apply saved theme
+    function applyTheme() {
+      const body = document.body;
+      body.className = currentTheme;
+    }
+    
+    // Apply theme on page load
+    applyTheme();
+    
     // Kiểm tra trạng thái đăng nhập
     const isLoggedIn = sessionStorage.getItem("isLoggedIn");
     if (isLoggedIn !== "true") {
@@ -77,10 +101,12 @@
       };
       imageContainer.appendChild(img);
 
-      // Biến để theo dõi mức zoom
+      // Biến để theo dõi mức zoom và vị trí cuộn
       let currentZoom = 1;
       const minZoom = 0.1;
       const maxZoom = 10;
+      let lastScrollX = 0;
+      let lastScrollY = 0;
 
       // Tạo thông tin zoom
       const zoomInfo = document.createElement('div');
@@ -93,37 +119,82 @@
         zoomInfo.textContent = `Zoom: ${Math.round(currentZoom * 100)}%`;
       }
 
+      // Hàm điều chỉnh vị trí cuộn khi zoom
+      function adjustScrollPosition(oldZoom, newZoom) {
+        if (newZoom <= 1) {
+          // Khi zoom out về 1x hoặc nhỏ hơn, center ảnh
+          imageContainer.scrollTo({
+            left: (imageContainer.scrollWidth - imageContainer.clientWidth) / 2,
+            top: (imageContainer.scrollHeight - imageContainer.clientHeight) / 2,
+            behavior: 'smooth'
+          });
+        } else {
+          // Khi zoom in, giữ vị trí tương đối
+          const zoomRatio = newZoom / oldZoom;
+          const newScrollX = lastScrollX * zoomRatio;
+          const newScrollY = lastScrollY * zoomRatio;
+          
+          // Đảm bảo không cuộn quá giới hạn
+          const maxScrollX = imageContainer.scrollWidth - imageContainer.clientWidth;
+          const maxScrollY = imageContainer.scrollHeight - imageContainer.clientHeight;
+          
+          imageContainer.scrollTo({
+            left: Math.max(0, Math.min(newScrollX, maxScrollX)),
+            top: Math.max(0, Math.min(newScrollY, maxScrollY)),
+            behavior: 'smooth'
+          });
+        }
+      }
+
+      // Hàm cập nhật zoom với điều chỉnh cuộn
+      function updateZoom(newZoom) {
+        const oldZoom = currentZoom;
+        currentZoom = Math.max(minZoom, Math.min(maxZoom, newZoom));
+        
+        // Lưu vị trí cuộn hiện tại trước khi zoom
+        lastScrollX = imageContainer.scrollLeft;
+        lastScrollY = imageContainer.scrollTop;
+        
+        // Áp dụng zoom
+        img.style.transform = `scale(${currentZoom})`;
+        updateZoomInfo();
+        
+        // Điều chỉnh vị trí cuộn sau khi zoom
+        setTimeout(() => {
+          adjustScrollPosition(oldZoom, currentZoom);
+        }, 50);
+      }
+
       // Xử lý zoom bằng chuột lăn (desktop)
       imageContainer.addEventListener('wheel', function(e) {
         e.preventDefault();
         
         const delta = e.deltaY > 0 ? 0.9 : 1.1;
-        const newZoom = Math.max(minZoom, Math.min(maxZoom, currentZoom * delta));
-        
-        if (newZoom !== currentZoom) {
-          currentZoom = newZoom;
-          img.style.transform = `scale(${currentZoom})`;
-          updateZoomInfo();
-        }
+        const newZoom = currentZoom * delta;
+        updateZoom(newZoom);
       });
 
       // Touch gestures cho mobile
       let initialDistance = 0;
       let initialZoom = 1;
+      let isPinching = false;
 
       imageContainer.addEventListener('touchstart', function(e) {
         if (e.touches.length === 2) {
           // Pinch to zoom
+          isPinching = true;
           initialDistance = Math.hypot(
             e.touches[0].clientX - e.touches[1].clientX,
             e.touches[0].clientY - e.touches[1].clientY
           );
           initialZoom = currentZoom;
+        } else if (e.touches.length === 1) {
+          isPinching = false;
         }
       });
 
       imageContainer.addEventListener('touchmove', function(e) {
-        if (e.touches.length === 2) {
+        if (e.touches.length === 2 && isPinching) {
           e.preventDefault();
           
           const currentDistance = Math.hypot(
@@ -132,14 +203,13 @@
           );
           
           const scale = currentDistance / initialDistance;
-          const newZoom = Math.max(minZoom, Math.min(maxZoom, initialZoom * scale));
-          
-          if (newZoom !== currentZoom) {
-            currentZoom = newZoom;
-            img.style.transform = `scale(${currentZoom})`;
-            updateZoomInfo();
-          }
+          const newZoom = initialZoom * scale;
+          updateZoom(newZoom);
         }
+      });
+
+      imageContainer.addEventListener('touchend', function(e) {
+        isPinching = false;
       });
 
       // Nút quay lại
@@ -163,10 +233,12 @@
       // Nút reset zoom
       const resetBtn = document.createElement('button');
       resetBtn.onclick = function() {
-        currentZoom = 1;
-        img.style.transform = `scale(${currentZoom})`;
-        imageContainer.scrollTo(0, 0);
-        updateZoomInfo();
+        updateZoom(1);
+        imageContainer.scrollTo({
+          left: (imageContainer.scrollWidth - imageContainer.clientWidth) / 2,
+          top: (imageContainer.scrollHeight - imageContainer.clientHeight) / 2,
+          behavior: 'smooth'
+        });
       };
       resetBtn.textContent = 'Reset Zoom';
       resetBtn.className = 'download-btn';
@@ -176,12 +248,7 @@
       // Nút zoom in/out cho mobile
       const zoomInBtn = document.createElement('button');
       zoomInBtn.onclick = function() {
-        const newZoom = Math.min(maxZoom, currentZoom * 1.2);
-        if (newZoom !== currentZoom) {
-          currentZoom = newZoom;
-          img.style.transform = `scale(${currentZoom})`;
-          updateZoomInfo();
-        }
+        updateZoom(currentZoom * 1.2);
       };
       zoomInBtn.textContent = 'Zoom +';
       zoomInBtn.className = 'download-btn';
@@ -190,12 +257,7 @@
 
       const zoomOutBtn = document.createElement('button');
       zoomOutBtn.onclick = function() {
-        const newZoom = Math.max(minZoom, currentZoom * 0.8);
-        if (newZoom !== currentZoom) {
-          currentZoom = newZoom;
-          img.style.transform = `scale(${currentZoom})`;
-          updateZoomInfo();
-        }
+        updateZoom(currentZoom * 0.8);
       };
       zoomOutBtn.textContent = 'Zoom -';
       zoomOutBtn.className = 'download-btn';
