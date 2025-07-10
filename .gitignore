@@ -1,0 +1,35 @@
+# Ẩn thư mục images khỏi Git để bảo vệ ảnh
+images/
+
+# File mã hóa ảnh (tùy chọn - có thể commit để chia sẻ)
+# encode_images.py
+# encode_images.js
+# encode.html
+
+# Các file tạm thời
+*.tmp
+*.temp
+
+# File log
+*.log
+
+# File cấu hình local
+.env
+.env.local
+
+# Thư mục node_modules (nếu có)
+node_modules/
+
+# File backup
+*.bak
+*.backup
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db 
