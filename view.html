@@ -504,12 +504,23 @@
       const saturateValue = document.getElementById('saturateValue');
       const shadowValue = document.getElementById('shadowValue');
       function applyAllEdits() {
-        // Vẽ lại ảnh gốc
-        let scale = Math.min(canvas.width/img.width, canvas.height/img.height);
+        // Tính scale để fit ảnh vào canvas (theo zoom)
+        let baseScale = Math.min(canvas.width/img.width, canvas.height/img.height);
+        let scale = baseScale * currentZoom;
         let w = img.width * scale;
         let h = img.height * scale;
-        let x = (canvas.width-w)/2;
-        let y = (canvas.height-h)/2;
+        // Tính vị trí vẽ ảnh (có pan khi zoom > 1)
+        let x, y;
+        if (currentZoom > 1) {
+          // Canvas luôn full khung, ảnh có thể bị "lệch" do pan
+          x = (canvas.width-w)/2 + panX;
+          y = (canvas.height-h)/2 + panY;
+        } else {
+          // Khi zoom <= 1, luôn căn giữa, reset pan
+          x = (canvas.width-w)/2;
+          y = (canvas.height-h)/2;
+          panX = 0; panY = 0; lastPanX = 0; lastPanY = 0;
+        }
         ctx.clearRect(0,0,canvas.width,canvas.height);
         ctx.drawImage(img, x, y, w, h);
         // Lấy pixel
@@ -519,10 +530,8 @@
         let shadow = parseInt(shadowSlider.value);
         if (shadow > 0) {
           for (let i = 0; i < data.length; i += 4) {
-            // Tính độ sáng pixel (giá trị trung bình RGB)
             let avg = (data[i] + data[i+1] + data[i+2]) / 3;
             if (avg < 128) {
-              // Tăng sáng cho vùng tối
               data[i] = Math.min(255, data[i] + shadow);
               data[i+1] = Math.min(255, data[i+1] + shadow);
               data[i+2] = Math.min(255, data[i+2] + shadow);
@@ -539,6 +548,7 @@
         contrastValue.textContent = c + '%';
         saturateValue.textContent = s + '%';
         shadowValue.textContent = shadow + '%';
+        updateZoomInfo();
       }
       brightnessSlider.oninput = contrastSlider.oninput = saturateSlider.oninput = shadowSlider.oninput = applyAllEdits;
       document.getElementById('resetEditBtn').onclick = function() {
@@ -552,9 +562,14 @@
       // Biến để theo dõi mức zoom và vị trí cuộn
       let currentZoom = 1;
       const minZoom = 0.1;
-      const maxZoom = 10;
+      const maxZoom = 30;
       let lastScrollX = 0;
       let lastScrollY = 0;
+      // Biến cho drag-to-pan
+      let isDragging = false;
+      let dragStartX = 0, dragStartY = 0;
+      let panX = 0, panY = 0;
+      let lastPanX = 0, lastPanY = 0;
 
       // Tạo thông tin zoom
       const zoomInfo = document.createElement('div');
@@ -598,15 +613,12 @@
       function updateZoom(newZoom) {
         const oldZoom = currentZoom;
         currentZoom = Math.max(minZoom, Math.min(maxZoom, newZoom));
-        
         // Lưu vị trí cuộn hiện tại trước khi zoom
         lastScrollX = imageContainer.scrollLeft;
         lastScrollY = imageContainer.scrollTop;
-        
-        // Áp dụng zoom
-        img.style.transform = `scale(${currentZoom})`;
+        // Vẽ lại ảnh với zoom mới
+        applyAllEdits();
         updateZoomInfo();
-        
         // Điều chỉnh vị trí cuộn sau khi zoom
         setTimeout(() => {
           adjustScrollPosition(oldZoom, currentZoom);
@@ -616,7 +628,6 @@
       // Xử lý zoom bằng chuột lăn (desktop)
       imageContainer.addEventListener('wheel', function(e) {
         e.preventDefault();
-        
         const delta = e.deltaY > 0 ? 0.9 : 1.1;
         const newZoom = currentZoom * delta;
         updateZoom(newZoom);
@@ -644,12 +655,10 @@
       imageContainer.addEventListener('touchmove', function(e) {
         if (e.touches.length === 2 && isPinching) {
           e.preventDefault();
-          
           const currentDistance = Math.hypot(
             e.touches[0].clientX - e.touches[1].clientX,
             e.touches[0].clientY - e.touches[1].clientY
           );
-          
           const scale = currentDistance / initialDistance;
           const newZoom = initialZoom * scale;
           updateZoom(newZoom);
@@ -658,6 +667,68 @@
 
       imageContainer.addEventListener('touchend', function(e) {
         isPinching = false;
+      });
+
+      // Drag-to-pan cho chuột
+      canvas.addEventListener('mousedown', function(e) {
+        if (currentZoom <= 1) return;
+        isDragging = true;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        canvas.style.cursor = 'grabbing';
+      });
+      window.addEventListener('mousemove', function(e) {
+        if (!isDragging) return;
+        let dx = e.clientX - dragStartX;
+        let dy = e.clientY - dragStartY;
+        panX = lastPanX + dx;
+        panY = lastPanY + dy;
+        // Giới hạn pan không cho kéo ra ngoài ảnh
+        let baseScale = Math.min(canvas.width/img.width, canvas.height/img.height);
+        let scale = baseScale * currentZoom;
+        let w = img.width * scale;
+        let h = img.height * scale;
+        let maxPanX = Math.max(0, (w-canvas.width)/2);
+        let maxPanY = Math.max(0, (h-canvas.height)/2);
+        panX = Math.max(-maxPanX, Math.min(maxPanX, panX));
+        panY = Math.max(-maxPanY, Math.min(maxPanY, panY));
+        applyAllEdits();
+      });
+      window.addEventListener('mouseup', function(e) {
+        if (!isDragging) return;
+        isDragging = false;
+        lastPanX = panX;
+        lastPanY = panY;
+        canvas.style.cursor = '';
+      });
+      // Drag-to-pan cho cảm ứng
+      canvas.addEventListener('touchstart', function(e) {
+        if (currentZoom <= 1 || e.touches.length !== 1) return;
+        isDragging = true;
+        dragStartX = e.touches[0].clientX;
+        dragStartY = e.touches[0].clientY;
+      });
+      window.addEventListener('touchmove', function(e) {
+        if (!isDragging || e.touches.length !== 1) return;
+        let dx = e.touches[0].clientX - dragStartX;
+        let dy = e.touches[0].clientY - dragStartY;
+        panX = lastPanX + dx;
+        panY = lastPanY + dy;
+        let baseScale = Math.min(canvas.width/img.width, canvas.height/img.height);
+        let scale = baseScale * currentZoom;
+        let w = img.width * scale;
+        let h = img.height * scale;
+        let maxPanX = Math.max(0, (w-canvas.width)/2);
+        let maxPanY = Math.max(0, (h-canvas.height)/2);
+        panX = Math.max(-maxPanX, Math.min(maxPanX, panX));
+        panY = Math.max(-maxPanY, Math.min(maxPanY, panY));
+        applyAllEdits();
+      }, {passive:false});
+      window.addEventListener('touchend', function(e) {
+        if (!isDragging) return;
+        isDragging = false;
+        lastPanX = panX;
+        lastPanY = panY;
       });
 
       // Keyboard controls
