@@ -3,33 +3,76 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Gallery</title>
+  <title>Gallery Pro - Ứng dụng xem ảnh</title>
   <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="light-mode">
-  <div id="login">
-    <!-- Form đăng nhập -->
-    <input type="password" id="pinInput" placeholder="Nhập mã PIN">
-    <button onclick="checkPIN()">Đăng nhập</button>
-    <div id="error" style="color: red;"></div>
+  <div class="main-container">
+    <!-- Login Section -->
+    <div id="login">
+      <h1>📸 Gallery Pro</h1>
+      <p style="text-align: center; color: #666; margin-bottom: 20px; font-size: 1.1rem;">
+        Khám phá bộ sưu tập ảnh tuyệt đẹp
+      </p>
+      <input type="password" id="pinInput" placeholder="Nhập mã PIN để truy cập">
+      <button onclick="checkPIN()">🔓 Đăng nhập</button>
+      <div id="error" style="color: red;"></div>
+    </div>
+
+    <!-- Navigation Section -->
+    <div id="navigation" style="display: none;">
+      <h2 style="text-align: center; margin-bottom: 25px; font-size: 1.8rem; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+        🎯 Chọn chế độ xem
+      </h2>
+      <div class="nav-buttons">
+        <button id="showAllBtn">📚 Xem tất cả ảnh</button>
+        <button id="showRandomBtn">🎲 Xem ngẫu nhiên 5 ảnh</button>
+        <button id="showFavoritesBtn">❤️ Xem ảnh yêu thích</button>
+        <button id="slideshowBtn">🎬 Slideshow tự động</button>
+        <button id="statsBtn">📊 Thống kê gallery</button>
+      </div>
+      <div class="theme-toggle">
+        <button id="themeToggle" class="theme-btn">
+          <span class="theme-icon">🌙</span>
+          <span class="theme-text">Dark Mode</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Gallery Section -->
+    <div id="gallery" style="display: none;">
+      <div class="gallery-header" style="text-align: center; margin-bottom: 20px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);">
+        <h2 style="margin: 0; font-size: 1.8rem; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+          🖼️ Bộ sưu tập ảnh
+        </h2>
+        <p style="margin: 10px 0 0 0; color: #666; font-size: 1rem;">
+          Click vào ảnh để xem chi tiết • Click ❤️ để yêu thích
+        </p>
+      </div>
+    </div>
   </div>
 
-  <!-- Navigation sau khi đăng nhập -->
-  <div id="navigation" style="display: none; flex-direction: column; align-items: center; margin-top: 20px;">
-    <div class="nav-buttons">
-      <button id="showAllBtn">Xem tất cả ảnh</button>
-      <button id="showRandomBtn">Xem ngẫu nhiên 5 ảnh</button>
+  <!-- Slideshow Container -->
+  <div id="slideshowContainer" style="display: none;">
+    <div id="slideshowImage"></div>
+    <div id="slideshowControls">
+      <button id="prevBtn" title="Ảnh trước">⏮</button>
+      <button id="playPauseBtn" title="Tạm dừng/Tiếp tục">⏸</button>
+      <button id="nextBtn" title="Ảnh tiếp">⏭</button>
+      <button id="closeSlideshowBtn" title="Đóng slideshow">✕</button>
     </div>
-    <div class="theme-toggle">
-      <button id="themeToggle" class="theme-btn">
-        <span class="theme-icon">🌙</span>
-        <span class="theme-text">Dark Mode</span>
-      </button>
-    </div>
+    <div id="slideshowInfo"></div>
   </div>
 
-  <!-- Gallery ảnh -->
-  <div id="gallery" style="display: none; flex-wrap: wrap;"></div>
+  <!-- Stats Modal -->
+  <div id="statsModal" style="display: none;">
+    <div id="statsContent">
+      <h2>📊 Thống kê Gallery</h2>
+      <div id="statsInfo"></div>
+      <button id="closeStatsBtn">Đóng</button>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>

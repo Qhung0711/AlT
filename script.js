@@ -4,6 +4,17 @@ let currentPage = 1;
 let currentImageList = [];
 let isLoading = false; // Tránh spam click
 
+// Slideshow variables
+let slideshowInterval = null;
+let slideshowSpeed = 5000; // 5 seconds
+let currentSlideshowIndex = 0;
+let slideshowImages = [];
+let isSlideshowPlaying = false;
+
+// Favorites management
+let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+let viewHistory = JSON.parse(localStorage.getItem('viewHistory') || '[]');
+
 // Theme management
 let currentTheme = localStorage.getItem('theme') || 'light-mode';
 
@@ -50,6 +61,189 @@ function applyTheme() {
   }
 }
 
+// Favorite functions
+function toggleFavorite(imageName) {
+  const index = favorites.indexOf(imageName);
+  if (index > -1) {
+    favorites.splice(index, 1);
+  } else {
+    favorites.push(imageName);
+  }
+  localStorage.setItem('favorites', JSON.stringify(favorites));
+  updateFavoriteButtons();
+}
+
+function isFavorite(imageName) {
+  return favorites.includes(imageName);
+}
+
+function updateFavoriteButtons() {
+  const favoriteButtons = document.querySelectorAll('.favorite-btn');
+  favoriteButtons.forEach(btn => {
+    const imageName = btn.getAttribute('data-image');
+    if (isFavorite(imageName)) {
+      btn.classList.add('favorited');
+      btn.innerHTML = '❤️';
+    } else {
+      btn.classList.remove('favorited');
+      btn.innerHTML = '🤍';
+    }
+  });
+}
+
+// View history functions
+function addToHistory(imageName) {
+  const index = viewHistory.indexOf(imageName);
+  if (index > -1) {
+    viewHistory.splice(index, 1);
+  }
+  viewHistory.unshift(imageName);
+  if (viewHistory.length > 50) {
+    viewHistory = viewHistory.slice(0, 50);
+  }
+  localStorage.setItem('viewHistory', JSON.stringify(viewHistory));
+}
+
+// Slideshow functions
+function startSlideshow(imageList) {
+  // Đảo ngẫu nhiên danh sách ảnh
+  slideshowImages = imageList.slice().sort(() => 0.5 - Math.random());
+  currentSlideshowIndex = 0;
+  isSlideshowPlaying = true;
+  
+  const slideshowContainer = document.getElementById('slideshowContainer');
+  const slideshowImage = document.getElementById('slideshowImage');
+  const playPauseBtn = document.getElementById('playPauseBtn');
+  const slideshowInfo = document.getElementById('slideshowInfo');
+  
+  slideshowContainer.style.display = 'flex';
+  showSlideshowImage();
+  
+  slideshowInterval = setInterval(() => {
+    if (isSlideshowPlaying) {
+      nextSlideshowImage();
+    }
+  }, slideshowSpeed);
+  
+  playPauseBtn.innerHTML = '⏸';
+  slideshowInfo.textContent = `${currentSlideshowIndex + 1} / ${slideshowImages.length}`;
+}
+
+function stopSlideshow() {
+  if (slideshowInterval) {
+    clearInterval(slideshowInterval);
+    slideshowInterval = null;
+  }
+  isSlideshowPlaying = false;
+  document.getElementById('slideshowContainer').style.display = 'none';
+}
+
+function showSlideshowImage() {
+  if (slideshowImages.length === 0) return;
+  
+  const slideshowImage = document.getElementById('slideshowImage');
+  const slideshowInfo = document.getElementById('slideshowInfo');
+  
+  slideshowImage.innerHTML = `<img src="images/${slideshowImages[currentSlideshowIndex]}" alt="${slideshowImages[currentSlideshowIndex]}">`;
+  slideshowInfo.textContent = `${currentSlideshowIndex + 1} / ${slideshowImages.length}`;
+  
+  addToHistory(slideshowImages[currentSlideshowIndex]);
+}
+
+function nextSlideshowImage() {
+  currentSlideshowIndex = (currentSlideshowIndex + 1) % slideshowImages.length;
+  showSlideshowImage();
+}
+
+function prevSlideshowImage() {
+  currentSlideshowIndex = currentSlideshowIndex === 0 ? slideshowImages.length - 1 : currentSlideshowIndex - 1;
+  showSlideshowImage();
+}
+
+function toggleSlideshowPlayPause() {
+  isSlideshowPlaying = !isSlideshowPlaying;
+  const playPauseBtn = document.getElementById('playPauseBtn');
+  playPauseBtn.innerHTML = isSlideshowPlaying ? '⏸' : '▶️';
+}
+
+// Stats functions
+function showStats() {
+  const statsModal = document.getElementById('statsModal');
+  const statsInfo = document.getElementById('statsInfo');
+  
+  const totalImages = imageNames.length;
+  const favoriteCount = favorites.length;
+  const recentViews = viewHistory.slice(0, 10);
+  
+  let statsHTML = `
+    <div style="margin-bottom: 25px;">
+      <h3>📊 Tổng quan</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+        <div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; border-radius: 15px; text-align: center;">
+          <div style="font-size: 2rem; margin-bottom: 5px;">📸</div>
+          <div style="font-size: 1.5rem; font-weight: 700;">${totalImages}</div>
+          <div style="font-size: 0.9rem; opacity: 0.9;">Tổng số ảnh</div>
+        </div>
+        <div style="background: linear-gradient(135deg, #ff6b6b, #ee5a24); color: white; padding: 20px; border-radius: 15px; text-align: center;">
+          <div style="font-size: 2rem; margin-bottom: 5px;">❤️</div>
+          <div style="font-size: 1.5rem; font-weight: 700;">${favoriteCount}</div>
+          <div style="font-size: 0.9rem; opacity: 0.9;">Ảnh yêu thích</div>
+        </div>
+        <div style="background: linear-gradient(135deg, #4facfe, #00f2fe); color: white; padding: 20px; border-radius: 15px; text-align: center;">
+          <div style="font-size: 2rem; margin-bottom: 5px;">📈</div>
+          <div style="font-size: 1.5rem; font-weight: 700;">${((favoriteCount / totalImages) * 100).toFixed(1)}%</div>
+          <div style="font-size: 0.9rem; opacity: 0.9;">Tỷ lệ yêu thích</div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  if (recentViews.length > 0) {
+    statsHTML += `
+      <div style="margin-bottom: 25px;">
+        <h3>👁️ Ảnh xem gần đây</h3>
+        <div style="max-height: 200px; overflow-y: auto; margin-top: 15px;">
+    `;
+    recentViews.forEach((image, index) => {
+      const isFav = isFavorite(image) ? '❤️' : '🤍';
+      statsHTML += `
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; margin: 5px 0; background: rgba(102, 126, 234, 0.1); border-radius: 10px; border-left: 4px solid #667eea;">
+          <span style="font-weight: 500;">${index + 1}. ${image}</span>
+          <span style="font-size: 1.2rem; cursor: pointer;" onclick="toggleFavorite('${image}')">${isFav}</span>
+        </div>
+      `;
+    });
+    statsHTML += `</div></div>`;
+  }
+  
+  if (favorites.length > 0) {
+    statsHTML += `
+      <div>
+        <h3>❤️ Ảnh yêu thích</h3>
+        <div style="max-height: 200px; overflow-y: auto; margin-top: 15px;">
+    `;
+    favorites.slice(0, 10).forEach((image, index) => {
+      statsHTML += `
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; margin: 5px 0; background: rgba(255, 107, 107, 0.1); border-radius: 10px; border-left: 4px solid #ff6b6b;">
+          <span style="font-weight: 500;">${index + 1}. ${image}</span>
+          <span style="font-size: 1.2rem;">❤️</span>
+        </div>
+      `;
+    });
+    if (favorites.length > 10) {
+      statsHTML += `
+        <div style="text-align: center; padding: 10px; color: #666; font-style: italic;">
+          ... và ${favorites.length - 10} ảnh khác
+        </div>
+      `;
+    }
+    statsHTML += `</div></div>`;
+  }
+  
+  statsInfo.innerHTML = statsHTML;
+  statsModal.style.display = 'flex';
+}
+
 // Xóa trạng thái đăng nhập mỗi lần tải lại trang (chỉ khi refresh hoặc đóng tab)
 window.addEventListener("DOMContentLoaded", function() {
   sessionStorage.removeItem("isLoggedIn");
@@ -82,7 +276,11 @@ document.addEventListener("DOMContentLoaded", function() {
   
   const showAllBtn = document.getElementById("showAllBtn");
   const showRandomBtn = document.getElementById("showRandomBtn");
+  const showFavoritesBtn = document.getElementById("showFavoritesBtn");
+  const slideshowBtn = document.getElementById("slideshowBtn");
+  const statsBtn = document.getElementById("statsBtn");
   const gallery = document.getElementById("gallery");
+  
   if (showAllBtn) {
     showAllBtn.onclick = function() {
       currentImageList = imageNames;
@@ -91,6 +289,7 @@ document.addEventListener("DOMContentLoaded", function() {
       gallery.style.display = "flex";
     };
   }
+  
   if (showRandomBtn) {
     showRandomBtn.onclick = function() {
       // Lấy 5 ảnh ngẫu nhiên
@@ -100,6 +299,60 @@ document.addEventListener("DOMContentLoaded", function() {
       currentPage = 1;
       loadImagesWithPagination(currentImageList);
       gallery.style.display = "flex";
+    };
+  }
+  
+  if (showFavoritesBtn) {
+    showFavoritesBtn.onclick = function() {
+      if (favorites.length === 0) {
+        alert('Bạn chưa có ảnh yêu thích nào!');
+        return;
+      }
+      currentImageList = favorites;
+      currentPage = 1;
+      loadImagesWithPagination(currentImageList);
+      gallery.style.display = "flex";
+    };
+  }
+  
+  if (slideshowBtn) {
+    slideshowBtn.onclick = function() {
+      startSlideshow(imageNames);
+    };
+  }
+  
+  if (statsBtn) {
+    statsBtn.onclick = function() {
+      showStats();
+    };
+  }
+  
+  // Slideshow controls
+  const prevBtn = document.getElementById('prevBtn');
+  const playPauseBtn = document.getElementById('playPauseBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const closeSlideshowBtn = document.getElementById('closeSlideshowBtn');
+  
+  if (prevBtn) prevBtn.onclick = prevSlideshowImage;
+  if (playPauseBtn) playPauseBtn.onclick = toggleSlideshowPlayPause;
+  if (nextBtn) nextBtn.onclick = nextSlideshowImage;
+  if (closeSlideshowBtn) closeSlideshowBtn.onclick = stopSlideshow;
+  
+  // Stats modal close
+  const closeStatsBtn = document.getElementById('closeStatsBtn');
+  if (closeStatsBtn) {
+    closeStatsBtn.onclick = function() {
+      document.getElementById('statsModal').style.display = 'none';
+    };
+  }
+  
+  // Close modal when clicking outside
+  const statsModal = document.getElementById('statsModal');
+  if (statsModal) {
+    statsModal.onclick = function(e) {
+      if (e.target === statsModal) {
+        statsModal.style.display = 'none';
+      }
     };
   }
 });
@@ -198,111 +451,87 @@ function loadImagesWithPagination(imageList) {
     gallery.appendChild(imagesContainer);
   }
   
-  // Xóa ảnh cũ
+  // Xóa nội dung cũ
   imagesContainer.innerHTML = "";
   
-  // Tính toán ảnh cho trang hiện tại
   const startIndex = (currentPage - 1) * imagesPerPage;
   const endIndex = startIndex + imagesPerPage;
   const currentPageImages = imageList.slice(startIndex, endIndex);
   
-  // Load ảnh cho trang hiện tại với tối ưu
-  currentPageImages.forEach((imageName, index) => {
+  currentPageImages.forEach(imageName => {
+    const imageWrapper = document.createElement("div");
+    imageWrapper.className = "image-wrapper";
+    
     const img = document.createElement("img");
     img.src = `images/${imageName}`;
-    img.alt = `Ảnh ${startIndex + index + 1}`;
     img.className = "thumbnail";
-    img.style.cursor = "pointer";
-    img.loading = "lazy";
-    
-    // Tối ưu: sử dụng event delegation thay vì onclick riêng lẻ
-    img.dataset.imageName = imageName;
-    imagesContainer.appendChild(img);
-  });
-  
-  // Event delegation cho click và touch
-  imagesContainer.onclick = function(e) {
-    if (e.target.tagName === 'IMG') {
-      const imageName = e.target.dataset.imageName;
+    img.alt = imageName;
+    img.onclick = function() {
+      addToHistory(imageName);
       window.location.href = `view.html?img=${encodeURIComponent(imageName)}`;
-    }
-  };
-  
-  // Touch events cho mobile
-  let touchStartX = 0;
-  let touchStartY = 0;
-  
-  imagesContainer.addEventListener('touchstart', function(e) {
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-  });
-  
-  imagesContainer.addEventListener('touchend', function(e) {
-    const touchEndX = e.changedTouches[0].clientX;
-    const touchEndY = e.changedTouches[0].clientY;
-    const deltaX = touchEndX - touchStartX;
-    const deltaY = touchEndY - touchStartY;
+    };
     
-    // Nếu là tap (không phải swipe)
-    if (Math.abs(deltaX) < 10 && Math.abs(deltaY) < 10) {
-      const target = e.target;
-      if (target.tagName === 'IMG') {
-        const imageName = target.dataset.imageName;
-        window.location.href = `view.html?img=${encodeURIComponent(imageName)}`;
-      }
-    }
+    // Thêm nút yêu thích
+    const favoriteBtn = document.createElement("button");
+    favoriteBtn.className = "favorite-btn";
+    favoriteBtn.setAttribute("data-image", imageName);
+    favoriteBtn.innerHTML = isFavorite(imageName) ? "❤️" : "🤍";
+    favoriteBtn.onclick = function(e) {
+      e.stopPropagation();
+      toggleFavorite(imageName);
+    };
+    
+    imageWrapper.appendChild(img);
+    imageWrapper.appendChild(favoriteBtn);
+    imagesContainer.appendChild(imageWrapper);
   });
+  
+  // Tạo pagination
+  const totalPages = Math.ceil(imageList.length / imagesPerPage);
+  createPagination(totalPages);
   
   // Preload trang tiếp theo
-  const totalPages = Math.ceil(imageList.length / imagesPerPage);
   if (currentPage < totalPages) {
-    setTimeout(() => preloadNextPage(imageList, currentPage + 1), 100);
+    preloadNextPage(imageList, currentPage + 1);
   }
   
-  // Tạo phân trang
-  createPagination(imageList.length);
-  
-  // Reset loading state
-  setTimeout(() => { isLoading = false; }, 300);
+  isLoading = false;
 }
 
-function createPagination(totalImages) {
+function createPagination(totalPages) {
   const gallery = document.getElementById("gallery");
-  const totalPages = Math.ceil(totalImages / imagesPerPage);
   
-  // Xóa phân trang cũ nếu có
+  // Xóa pagination cũ
   const oldPagination = gallery.querySelector(".pagination");
   if (oldPagination) {
     oldPagination.remove();
   }
   
-  // Tạo container phân trang
+  if (totalPages <= 1) return;
+  
   const pagination = document.createElement("div");
   pagination.className = "pagination";
   pagination.style.display = "flex";
   pagination.style.justifyContent = "center";
   pagination.style.alignItems = "center";
-  pagination.style.gap = "8px";
+  pagination.style.gap = "5px";
   pagination.style.marginTop = "20px";
   pagination.style.flexWrap = "wrap";
   
-  // Nút "Trang trước"
+  // Nút Previous
   if (currentPage > 1) {
     const prevBtn = document.createElement("button");
-    prevBtn.textContent = "← Trước";
     prevBtn.className = "page-btn";
+    prevBtn.textContent = "←";
     prevBtn.onclick = function() {
-      if (!isLoading) {
-        currentPage--;
-        loadImagesWithPagination(currentImageList);
-      }
+      currentPage--;
+      loadImagesWithPagination(currentImageList);
     };
     pagination.appendChild(prevBtn);
   }
   
-  // Các nút số trang (giảm số lượng trên mobile)
-  const isMobile = window.innerWidth <= 768;
-  const maxVisiblePages = isMobile ? 3 : 5;
+  // Hiển thị tối đa 5 trang
+  const maxVisiblePages = 5;
   let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
   let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
   
@@ -310,45 +539,87 @@ function createPagination(totalImages) {
     startPage = Math.max(1, endPage - maxVisiblePages + 1);
   }
   
+  // Nút trang đầu
+  if (startPage > 1) {
+    const firstBtn = document.createElement("button");
+    firstBtn.className = "page-btn";
+    firstBtn.textContent = "1";
+    firstBtn.onclick = function() {
+      currentPage = 1;
+      loadImagesWithPagination(currentImageList);
+    };
+    pagination.appendChild(firstBtn);
+    
+    if (startPage > 2) {
+      const ellipsis = document.createElement("span");
+      ellipsis.textContent = "...";
+      ellipsis.style.margin = "0 5px";
+      pagination.appendChild(ellipsis);
+    }
+  }
+  
+  // Các nút trang
   for (let i = startPage; i <= endPage; i++) {
     const pageBtn = document.createElement("button");
+    pageBtn.className = "page-btn";
     pageBtn.textContent = i;
-    pageBtn.className = i === currentPage ? "page-btn active" : "page-btn";
+    if (i === currentPage) {
+      pageBtn.classList.add("active");
+    }
     pageBtn.onclick = function() {
-      if (!isLoading && i !== currentPage) {
-        currentPage = i;
-        loadImagesWithPagination(currentImageList);
-      }
+      currentPage = i;
+      loadImagesWithPagination(currentImageList);
     };
     pagination.appendChild(pageBtn);
   }
   
-  // Nút "Trang sau"
+  // Nút trang cuối
+  if (endPage < totalPages) {
+    if (endPage < totalPages - 1) {
+      const ellipsis = document.createElement("span");
+      ellipsis.textContent = "...";
+      ellipsis.style.margin = "0 5px";
+      pagination.appendChild(ellipsis);
+    }
+    
+    const lastBtn = document.createElement("button");
+    lastBtn.className = "page-btn";
+    lastBtn.textContent = totalPages;
+    lastBtn.onclick = function() {
+      currentPage = totalPages;
+      loadImagesWithPagination(currentImageList);
+    };
+    pagination.appendChild(lastBtn);
+  }
+  
+  // Nút Next
   if (currentPage < totalPages) {
     const nextBtn = document.createElement("button");
-    nextBtn.textContent = "Sau →";
     nextBtn.className = "page-btn";
+    nextBtn.textContent = "→";
     nextBtn.onclick = function() {
-      if (!isLoading) {
-        currentPage++;
-        loadImagesWithPagination(currentImageList);
-      }
+      currentPage++;
+      loadImagesWithPagination(currentImageList);
     };
     pagination.appendChild(nextBtn);
   }
-  
-  // Hiển thị thông tin trang
-  const pageInfo = document.createElement("span");
-  pageInfo.textContent = `Trang ${currentPage} / ${totalPages} (${totalImages} ảnh)`;
-  pageInfo.style.marginLeft = "15px";
-  pageInfo.style.color = "#666";
-  pageInfo.style.fontSize = isMobile ? "12px" : "14px";
-  pagination.appendChild(pageInfo);
   
   gallery.appendChild(pagination);
 }
 
 function loadImages(list) {
-  // Hàm cũ giữ lại để tương thích
-  loadImagesWithPagination(list);
+  const gallery = document.getElementById("gallery");
+  gallery.innerHTML = "";
+  
+  list.forEach(imageName => {
+    const img = document.createElement("img");
+    img.src = `images/${imageName}`;
+    img.className = "thumbnail";
+    img.alt = imageName;
+    img.onclick = function() {
+      addToHistory(imageName);
+      window.location.href = `view.html?img=${encodeURIComponent(imageName)}`;
+    };
+    gallery.appendChild(img);
+  });
 }

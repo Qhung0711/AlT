@@ -3,22 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Xem ảnh lớn</title>
+  <title>Xem ảnh - Gallery Pro</title>
   <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     .image-container {
       width: 95vw;
       height: 70vh;
       overflow: auto;
-      border: 2px solid #ddd;
-      border-radius: 10px;
+      border: 3px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
       position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
       -webkit-overflow-scrolling: touch;
-      transition: border-color 0.3s ease;
+      transition: all 0.3s ease;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     }
+    
+    body.dark-mode .image-container {
+      border-color: rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.2);
+    }
+    
     .zoomable-image {
       max-width: 100%;
       max-height: 100%;
@@ -26,40 +36,292 @@
       transition: transform 0.1s ease;
       transform-origin: center;
       touch-action: manipulation;
-    }
-    .zoom-info {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      background: rgba(0,0,0,0.7);
-      color: white;
-      padding: 8px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      z-index: 1000;
-      transition: background-color 0.3s ease;
+      border-radius: 15px;
     }
     
-    /* Dark mode styles for view page */
+    .zoom-info {
+      position: fixed;
+      top: 30px;
+      right: 30px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 15px 25px;
+      border-radius: 25px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      z-index: 1000;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    
     body.dark-mode .zoom-info {
-      background: rgba(255,255,255,0.2);
+      background: rgba(255, 255, 255, 0.2);
       color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
     
     body.dark-mode #errorMsg {
       color: #ff6b6b;
     }
+
+    /* View page controls */
+    .view-controls {
+      position: fixed;
+      top: 30px;
+      left: 30px;
+      display: flex;
+      gap: 15px;
+      z-index: 1000;
+    }
+
+    .view-controls button {
+      padding: 15px 25px;
+      background: rgba(255, 255, 255, 0.95);
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+    }
+
+    .view-controls button:hover {
+      background: rgba(255, 255, 255, 1);
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    body.dark-mode .view-controls button {
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+    }
+
+    body.dark-mode .view-controls button:hover {
+      background: rgba(0, 0, 0, 0.9);
+    }
+
+    .favorite-btn-view {
+      background: rgba(255, 255, 255, 0.95) !important;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      cursor: pointer;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+    }
+
+    .favorite-btn-view:hover {
+      background: rgba(255, 255, 255, 1) !important;
+      transform: scale(1.15);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .favorite-btn-view.favorited {
+      color: #ff4757;
+      animation: heartBeat 0.6s ease;
+    }
+
+    .favorite-btn-view:not(.favorited) {
+      color: #ddd;
+    }
+
+    body.dark-mode .favorite-btn-view {
+      background: rgba(0, 0, 0, 0.8) !important;
+      color: #ddd;
+    }
+
+    body.dark-mode .favorite-btn-view:hover {
+      background: rgba(0, 0, 0, 0.9) !important;
+    }
+
+    body.dark-mode .favorite-btn-view.favorited {
+      color: #ff6b6b;
+    }
+
+    /* Image info panel */
+    .image-info {
+      position: fixed;
+      bottom: 30px;
+      left: 30px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      max-width: 400px;
+      z-index: 1000;
+    }
+
+    body.dark-mode .image-info {
+      background: rgba(30, 30, 50, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .image-info h3 {
+      margin: 0 0 10px 0;
+      font-size: 1.2rem;
+      color: #667eea;
+    }
+
+    body.dark-mode .image-info h3 {
+      color: #4facfe;
+    }
+
+    .image-info p {
+      margin: 5px 0;
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    body.dark-mode .image-info p {
+      color: #aaa;
+    }
+
+    /* Keyboard shortcuts info */
+    .shortcuts-info {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 15px 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      font-size: 0.9rem;
+      color: #666;
+      z-index: 1000;
+    }
+
+    body.dark-mode .shortcuts-info {
+      background: rgba(30, 30, 50, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #aaa;
+    }
+
+    .shortcuts-info strong {
+      color: #667eea;
+    }
+
+    body.dark-mode .shortcuts-info strong {
+      color: #4facfe;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .view-controls {
+        top: 20px;
+        left: 20px;
+        gap: 10px;
+      }
+
+      .view-controls button {
+        padding: 12px 18px;
+        font-size: 0.9rem;
+      }
+
+      .favorite-btn-view {
+        width: 50px;
+        height: 50px;
+        font-size: 1.3rem;
+      }
+
+      .image-info, .shortcuts-info {
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        max-width: none;
+        font-size: 0.8rem;
+      }
+
+      .shortcuts-info {
+        bottom: 120px;
+        left: 20px;
+        right: 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .view-controls {
+        top: 15px;
+        left: 15px;
+        gap: 8px;
+      }
+
+      .view-controls button {
+        padding: 10px 15px;
+        font-size: 0.8rem;
+      }
+
+      .favorite-btn-view {
+        width: 45px;
+        height: 45px;
+        font-size: 1.2rem;
+      }
+
+      .image-info, .shortcuts-info {
+        bottom: 15px;
+        left: 15px;
+        right: 15px;
+        padding: 15px;
+      }
+
+      .shortcuts-info {
+        bottom: 100px;
+      }
+    }
   </style>
 </head>
 <body class="light-mode">
+  <!-- View controls -->
+  <div class="view-controls">
+    <button onclick="goBack()">← Quay lại</button>
+    <button id="favoriteBtnView" class="favorite-btn-view" onclick="toggleFavoriteView()" title="Yêu thích">🤍</button>
+  </div>
+
   <div class="view-container">
     <div id="imageArea"></div>
     <div id="buttonArea" style="display: flex; gap: 12px; margin-top: 18px; flex-wrap: wrap; justify-content: center;"></div>
     <div id="errorMsg" style="color: red; margin-top: 20px;"></div>
   </div>
+
+  <!-- Image info panel -->
+  <div class="image-info" id="imageInfo" style="display: none;">
+    <h3>📸 Thông tin ảnh</h3>
+    <p><strong>Tên file:</strong> <span id="imageName"></span></p>
+    <p><strong>Kích thước:</strong> <span id="imageSize"></span></p>
+    <p><strong>Định dạng:</strong> <span id="imageFormat"></span></p>
+  </div>
+
+  <!-- Keyboard shortcuts info -->
+  <div class="shortcuts-info">
+    <strong>⌨️ Phím tắt:</strong><br>
+    <strong>F</strong> - Yêu thích • <strong>Esc</strong> - Quay lại<br>
+    <strong>←/→</strong> - Zoom • <strong>Wheel</strong> - Zoom
+  </div>
+
   <script>
     // Theme management for view page
     let currentTheme = localStorage.getItem('theme') || 'light-mode';
+    
+    // Favorites management
+    let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    let viewHistory = JSON.parse(localStorage.getItem('viewHistory') || '[]');
+    let currentImageName = '';
     
     // Apply saved theme
     function applyTheme() {
@@ -69,6 +331,74 @@
     
     // Apply theme on page load
     applyTheme();
+    
+    // Favorite functions
+    function toggleFavoriteView() {
+      if (!currentImageName) return;
+      
+      const index = favorites.indexOf(currentImageName);
+      if (index > -1) {
+        favorites.splice(index, 1);
+      } else {
+        favorites.push(currentImageName);
+      }
+      localStorage.setItem('favorites', JSON.stringify(favorites));
+      updateFavoriteButtonView();
+    }
+    
+    function isFavorite(imageName) {
+      return favorites.includes(imageName);
+    }
+    
+    function updateFavoriteButtonView() {
+      const favoriteBtn = document.getElementById('favoriteBtnView');
+      if (isFavorite(currentImageName)) {
+        favoriteBtn.classList.add('favorited');
+        favoriteBtn.innerHTML = '❤️';
+        favoriteBtn.title = 'Bỏ yêu thích';
+      } else {
+        favoriteBtn.classList.remove('favorited');
+        favoriteBtn.innerHTML = '🤍';
+        favoriteBtn.title = 'Yêu thích';
+      }
+    }
+    
+    // View history functions
+    function addToHistory(imageName) {
+      const index = viewHistory.indexOf(imageName);
+      if (index > -1) {
+        viewHistory.splice(index, 1);
+      }
+      viewHistory.unshift(imageName);
+      if (viewHistory.length > 50) {
+        viewHistory = viewHistory.slice(0, 50);
+      }
+      localStorage.setItem('viewHistory', JSON.stringify(viewHistory));
+    }
+    
+    // Navigation function
+    function goBack() {
+      window.history.back();
+    }
+    
+    // Update image info
+    function updateImageInfo(imgName) {
+      const imageInfo = document.getElementById('imageInfo');
+      const imageNameSpan = document.getElementById('imageName');
+      const imageSizeSpan = document.getElementById('imageSize');
+      const imageFormatSpan = document.getElementById('imageFormat');
+      
+      imageNameSpan.textContent = imgName;
+      imageFormatSpan.textContent = imgName.split('.').pop().toUpperCase();
+      
+      // Get image size
+      const img = new Image();
+      img.onload = function() {
+        imageSizeSpan.textContent = `${this.naturalWidth} × ${this.naturalHeight} px`;
+        imageInfo.style.display = 'block';
+      };
+      img.src = `images/${imgName}`;
+    }
     
     // Kiểm tra trạng thái đăng nhập
     const isLoggedIn = sessionStorage.getItem("isLoggedIn");
@@ -84,7 +414,13 @@
     const imageArea = document.getElementById('imageArea');
     const buttonArea = document.getElementById('buttonArea');
     const errorMsg = document.getElementById('errorMsg');
+    
     if (imgName) {
+      currentImageName = imgName;
+      addToHistory(imgName);
+      updateFavoriteButtonView();
+      updateImageInfo(imgName);
+      
       // Tạo container cho ảnh với thanh cuộn
       const imageContainer = document.createElement('div');
       imageContainer.className = 'image-container';
@@ -116,7 +452,7 @@
 
       // Cập nhật thông tin zoom
       function updateZoomInfo() {
-        zoomInfo.textContent = `Zoom: ${Math.round(currentZoom * 100)}%`;
+        zoomInfo.textContent = `🔍 Zoom: ${Math.round(currentZoom * 100)}%`;
       }
 
       // Hàm điều chỉnh vị trí cuộn khi zoom
@@ -212,60 +548,54 @@
         isPinching = false;
       });
 
-      // Nút quay lại
-      const backBtn = document.createElement('button');
-      backBtn.onclick = function() {
-        history.back();
-      };
-      backBtn.textContent = 'Quay lại';
-      backBtn.className = 'download-btn';
-      backBtn.style.background = '#888';
-      buttonArea.appendChild(backBtn);
-      
-      // Nút tải về
+      // Keyboard controls
+      document.addEventListener('keydown', function(e) {
+        switch(e.key) {
+          case 'ArrowLeft':
+            e.preventDefault();
+            // Navigate to previous image if available
+            break;
+          case 'ArrowRight':
+            e.preventDefault();
+            // Navigate to next image if available
+            break;
+          case 'Escape':
+            e.preventDefault();
+            goBack();
+            break;
+          case 'f':
+          case 'F':
+            e.preventDefault();
+            toggleFavoriteView();
+            break;
+        }
+      });
+
+      // Tạo nút tải xuống
       const downloadBtn = document.createElement('a');
-      downloadBtn.href = img.src;
+      downloadBtn.href = `images/${imgName}`;
       downloadBtn.download = imgName;
-      downloadBtn.textContent = 'Tải về';
       downloadBtn.className = 'download-btn';
+      downloadBtn.textContent = '📥 Tải xuống ảnh';
       buttonArea.appendChild(downloadBtn);
-      
-      // Nút reset zoom
-      const resetBtn = document.createElement('button');
-      resetBtn.onclick = function() {
-        updateZoom(1);
-        imageContainer.scrollTo({
-          left: (imageContainer.scrollWidth - imageContainer.clientWidth) / 2,
-          top: (imageContainer.scrollHeight - imageContainer.clientHeight) / 2,
-          behavior: 'smooth'
-        });
-      };
-      resetBtn.textContent = 'Reset Zoom';
-      resetBtn.className = 'download-btn';
-      resetBtn.style.background = '#28a745';
-      buttonArea.appendChild(resetBtn);
 
-      // Nút zoom in/out cho mobile
-      const zoomInBtn = document.createElement('button');
-      zoomInBtn.onclick = function() {
-        updateZoom(currentZoom * 1.2);
+      // Tạo nút xem ảnh gốc
+      const originalBtn = document.createElement('a');
+      originalBtn.href = `images/${imgName}`;
+      originalBtn.target = '_blank';
+      originalBtn.className = 'download-btn';
+      originalBtn.style.backgroundColor = '#6c757d';
+      originalBtn.textContent = '🔍 Xem ảnh gốc';
+      originalBtn.onmouseover = function() {
+        this.style.backgroundColor = '#5a6268';
       };
-      zoomInBtn.textContent = 'Zoom +';
-      zoomInBtn.className = 'download-btn';
-      zoomInBtn.style.background = '#ff9800';
-      buttonArea.appendChild(zoomInBtn);
-
-      const zoomOutBtn = document.createElement('button');
-      zoomOutBtn.onclick = function() {
-        updateZoom(currentZoom * 0.8);
+      originalBtn.onmouseout = function() {
+        this.style.backgroundColor = '#6c757d';
       };
-      zoomOutBtn.textContent = 'Zoom -';
-      zoomOutBtn.className = 'download-btn';
-      zoomOutBtn.style.background = '#ff9800';
-      buttonArea.appendChild(zoomOutBtn);
+      buttonArea.appendChild(originalBtn);
 
     } else {
-      errorMsg.textContent = 'Không có ảnh để hiển thị!';
+      errorMsg.textContent = 'Không có ảnh nào được chọn!';
     }
   </script>
 </body>
