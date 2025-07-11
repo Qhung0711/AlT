@@ -10,36 +10,36 @@
 <body class="light-mode">
   <div class="main-container">
     <!-- Login Section -->
-    <div id="login">
+  <div id="login">
       <h1>📸 Gallery Pro</h1>
       <p style="text-align: center; color: #666; margin-bottom: 20px; font-size: 1.1rem;">
         Khám phá bộ sưu tập ảnh tuyệt đẹp
       </p>
       <input type="password" id="pinInput" placeholder="Nhập mã PIN để truy cập">
       <button onclick="checkPIN()">🔓 Đăng nhập</button>
-      <div id="error" style="color: red;"></div>
-    </div>
+    <div id="error" style="color: red;"></div>
+  </div>
 
     <!-- Navigation Section -->
     <div id="navigation" style="display: none;">
       <h2 style="text-align: center; margin-bottom: 25px; font-size: 1.8rem; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
         🎯 Chọn chế độ xem
       </h2>
-      <div class="nav-buttons">
+    <div class="nav-buttons">
         <button id="showAllBtn">📚 Xem tất cả ảnh</button>
         <button id="showRandomBtn">🎲 Xem ngẫu nhiên 5 ảnh</button>
         <button id="showFavoritesBtn">❤️ Xem ảnh yêu thích</button>
         <button id="slideshowBtn">🎬 Slideshow tự động</button>
         <button id="statsBtn">📊 Thống kê gallery</button>
         <button id="miniGameBtn">🕹️ Mini Game</button>
-      </div>
-      <div class="theme-toggle">
-        <button id="themeToggle" class="theme-btn">
-          <span class="theme-icon">🌙</span>
-          <span class="theme-text">Dark Mode</span>
-        </button>
-      </div>
     </div>
+    <div class="theme-toggle">
+      <button id="themeToggle" class="theme-btn">
+        <span class="theme-icon">🌙</span>
+        <span class="theme-text">Dark Mode</span>
+      </button>
+    </div>
+  </div>
 
     <!-- Gallery Section -->
     <div id="gallery" style="display: none;">

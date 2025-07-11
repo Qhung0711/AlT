@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Mini Game - Mở Ảnh Bí Ẩn</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 0;
+      margin: 0;
+    }
+    .mini-game-container {
+      max-width: 420px;
+      width: 100vw;
+      margin: 30px auto 0 auto;
+      background: rgba(255,255,255,0.95);
+      border-radius: 24px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+      padding: 24px 10px 32px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+    .mini-game-header {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+    .mini-game-header h2 {
+      font-size: 2rem;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+    }
+    .mini-game-image-area {
+      position: relative;
+      width: 320px;
+      height: 220px;
+      margin-bottom: 18px;
+    }
+    .mini-game-image-area img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 18px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      display: block;
+    }
+    .mini-cover-block {
+      position: absolute;
+      background: #111;
+      opacity: 1;
+      z-index: 2;
+      transition: opacity 0.5s;
+    }
+    .mini-cover-block.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+    /* 4 block positions */
+    .cover0 { top:0; left:0; width:50%; height:50%; border-radius: 18px 0 0 0; }
+    .cover1 { top:0; right:0; width:50%; height:50%; border-radius: 0 18px 0 0; }
+    .cover2 { bottom:0; left:0; width:50%; height:50%; border-radius: 0 0 0 18px; }
+    .cover3 { bottom:0; right:0; width:50%; height:50%; border-radius: 0 0 18px 0; }
+    .mini-game-level-info {
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+      color: #333;
+      font-weight: 500;
+    }
+    .mini-game-canvas-area {
+      width: 320px;
+      height: 320px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+    .mini-game-message {
+      font-size: 1.1rem;
+      color: #1976d2;
+      min-height: 24px;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .mini-game-btns {
+      display: flex;
+      gap: 12px;
+      margin-top: 10px;
+      justify-content: center;
+    }
+    .mini-game-btns button {
+      padding: 12px 30px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .mini-game-btns button:hover {
+      background: linear-gradient(135deg, #5a6fd8, #6a4190);
+    }
+    @media (max-width: 480px) {
+      .mini-game-container { max-width: 100vw; padding: 10px 2px 20px 2px; }
+      .mini-game-image-area, .mini-game-canvas-area { width: 98vw; max-width: 320px; }
+      .mini-game-image-area { height: 38vw; max-height: 220px; }
+      .mini-game-canvas-area { height: 60vw; max-height: 320px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="mini-game-container">
+    <div class="mini-game-header">
+      <h2>🕹️ Mini Game: Mở Ảnh Bí Ẩn</h2>
+      <div class="mini-game-level-info">
+        Bàn: <span id="miniGameLevel">1</span> | Ô che còn lại: <span id="miniGameCovers">4</span>
+      </div>
+    </div>
+    <div class="mini-game-image-area">
+      <img id="miniGameImage" src="" alt="Ảnh bí ẩn">
+      <div id="coverBlock0" class="mini-cover-block cover0"></div>
+      <div id="coverBlock1" class="mini-cover-block cover1"></div>
+      <div id="coverBlock2" class="mini-cover-block cover2"></div>
+      <div id="coverBlock3" class="mini-cover-block cover3"></div>
+    </div>
+    <div class="mini-game-canvas-area">
+      <canvas id="miniGameCanvas" width="320" height="320" style="background: #f5f5f5; border-radius: 18px; box-shadow: 0 4px 16px rgba(0,0,0,0.1);"></canvas>
+    </div>
+    <div class="mini-game-message" id="miniGameMessage"></div>
+    <div class="mini-game-btns">
+      <button id="miniGameBackBtn">← Quay lại</button>
+      <button id="miniGameRestartBtn" style="display:none;">Chơi lại</button>
+    </div>
+  </div>
+  <script>
+    // Danh sách ảnh lấy từ script.js nếu có, nếu không thì hardcode mẫu
+    const imageNames = window.imageNames || [
+      "images/IMG_2598.JPG","images/IMG_2599.JPG","images/IMG_2600.JPG","images/IMG_2601.JPG","images/IMG_2602.JPG"
+    ];
+    function getRandomImage() {
+      if (window.imageNames && window.imageNames.length > 0) {
+        return "images/" + window.imageNames[Math.floor(Math.random() * window.imageNames.length)];
+      }
+      return imageNames[Math.floor(Math.random() * imageNames.length)];
+    }
+    // Mini game state
+    let miniGameState = {
+      image: '',
+      covers: [true, true, true, true],
+      level: 1,
+      maxLevel: 4,
+      isPlaying: false
+    };
+    // Khởi tạo game
+    function startMiniGame() {
+      miniGameState.image = getRandomImage();
+      miniGameState.covers = [true, true, true, true];
+      miniGameState.level = 1;
+      miniGameState.isPlaying = true;
+      document.getElementById('miniGameImage').src = miniGameState.image;
+      for (let i = 0; i < 4; i++) {
+        document.getElementById('coverBlock' + i).classList.remove('hide');
+      }
+      document.getElementById('miniGameLevel').textContent = miniGameState.level;
+      document.getElementById('miniGameCovers').textContent = miniGameState.covers.filter(x=>x).length;
+      document.getElementById('miniGameMessage').textContent = '';
+      document.getElementById('miniGameRestartBtn').style.display = 'none';
+      initMiniGameLevel();
+    }
+    // Quay lại trang chính
+    document.getElementById('miniGameBackBtn').onclick = function() {
+      window.location.href = 'index.html';
+    };
+    // Chơi lại
+    document.getElementById('miniGameRestartBtn').onclick = function() {
+      startMiniGame();
+    };
+    // Game click hình tròn
+    let gameInterval, circles, score, required, isLevelActive;
+    function initMiniGameLevel() {
+      const ctx = document.getElementById('miniGameCanvas').getContext('2d');
+      ctx.clearRect(0, 0, 320, 320);
+      score = 0;
+      required = 5 + miniGameState.level * 2;
+      isLevelActive = true;
+      circles = [];
+      spawnCircle();
+      drawGame();
+      if (gameInterval) clearInterval(gameInterval);
+      gameInterval = setInterval(drawGame, 1000/60);
+      document.getElementById('miniGameCanvas').onclick = function(e) {
+        if (!isLevelActive) return;
+        const rect = this.getBoundingClientRect();
+        const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+        const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+        for (let i = 0; i < circles.length; i++) {
+          const c = circles[i];
+          if (Math.hypot(x-c.x, y-c.y) <= c.r) {
+            score++;
+            circles.splice(i,1);
+            spawnCircle();
+            break;
+          }
+        }
+        if (score >= required) {
+          isLevelActive = false;
+          clearInterval(gameInterval);
+          document.getElementById('miniGameMessage').textContent = '🎉 Bạn đã vượt qua bàn '+miniGameState.level+'!';
+          openNextCover();
+        }
+      };
+      // Touch support
+      document.getElementById('miniGameCanvas').ontouchstart = function(e) {
+        this.onclick(e);
+      };
+    }
+    function spawnCircle() {
+      // Thêm 1 hình tròn ở vị trí ngẫu nhiên
+      const r = 28 + Math.random()*12;
+      const x = 40 + Math.random()*(320-80);
+      const y = 60 + Math.random()*(320-120);
+      circles.push({x, y, r, color: randomColor()});
+    }
+    function randomColor() {
+      const colors = ['#ff6b6b','#feca57','#48dbfb','#1dd1a1','#5f27cd','#222f3e'];
+      return colors[Math.floor(Math.random()*colors.length)];
+    }
+    function drawGame() {
+      const ctx = document.getElementById('miniGameCanvas').getContext('2d');
+      ctx.clearRect(0, 0, 320, 320);
+      // Vẽ các hình tròn
+      for (const c of circles) {
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, c.r, 0, 2*Math.PI);
+        ctx.fillStyle = c.color;
+        ctx.shadowColor = c.color;
+        ctx.shadowBlur = 10;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+      // Nếu chưa đủ hình tròn thì thêm
+      if (circles.length < 1 && isLevelActive) spawnCircle();
+      // Hiển thị điểm
+      ctx.font = 'bold 20px Inter, Arial';
+      ctx.fillStyle = '#333';
+      ctx.textAlign = 'center';
+      ctx.fillText('Điểm: '+score+'/'+required, 160, 30);
+    }
+    // Mở 1 ô che
+    function openNextCover() {
+      for (let i = 0; i < 4; i++) {
+        if (miniGameState.covers[i]) {
+          miniGameState.covers[i] = false;
+          document.getElementById('coverBlock'+i).classList.add('hide');
+          break;
+        }
+      }
+      let coversLeft = miniGameState.covers.filter(x=>x).length;
+      document.getElementById('miniGameCovers').textContent = coversLeft;
+      if (coversLeft === 0) {
+        document.getElementById('miniGameMessage').textContent = '🏆 Chúc mừng! Bạn đã mở được ảnh bí ẩn!';
+        document.getElementById('miniGameRestartBtn').style.display = '';
+      } else {
+        // Sang bàn tiếp theo
+        miniGameState.level++;
+        document.getElementById('miniGameLevel').textContent = miniGameState.level;
+        setTimeout(()=>{
+          document.getElementById('miniGameMessage').textContent = '';
+          initMiniGameLevel();
+        }, 1200);
+      }
+    }
+    // Bắt đầu game khi load trang
+    window.onload = startMiniGame;
+  </script>
+</body>
+</html> 

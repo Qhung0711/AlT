@@ -295,6 +295,34 @@
 
   <div class="view-container">
     <div id="imageArea"></div>
+    <!-- Bộ chỉnh sửa ảnh -->
+    <div id="editControls" style="display:none; margin: 20px 0 0 0; width: 100%; max-width: 600px; background: rgba(255,255,255,0.85); border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); padding: 18px 18px 10px 18px;">
+      <div style="display: flex; flex-direction: column; gap: 18px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <label for="brightnessSlider" style="width: 90px;">Độ sáng</label>
+          <input type="range" id="brightnessSlider" min="50" max="200" value="100" style="flex:1;">
+          <span id="brightnessValue">100%</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <label for="contrastSlider" style="width: 90px;">Tương phản</label>
+          <input type="range" id="contrastSlider" min="50" max="200" value="100" style="flex:1;">
+          <span id="contrastValue">100%</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <label for="saturateSlider" style="width: 90px;">Bão hòa</label>
+          <input type="range" id="saturateSlider" min="0" max="200" value="100" style="flex:1;">
+          <span id="saturateValue">100%</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <label for="shadowSlider" style="width: 90px;">Tăng sáng tối</label>
+          <input type="range" id="shadowSlider" min="0" max="100" value="0" style="flex:1;">
+          <span id="shadowValue">0%</span>
+        </div>
+        <div style="text-align: right;">
+          <button id="resetEditBtn" style="padding: 8px 22px; border-radius: 8px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; font-size: 1rem; font-weight: 600; cursor: pointer;">Đặt lại</button>
+        </div>
+      </div>
+    </div>
     <div id="buttonArea" style="display: flex; gap: 12px; margin-top: 18px; flex-wrap: wrap; justify-content: center;"></div>
     <div id="errorMsg" style="color: red; margin-top: 20px;"></div>
   </div>
@@ -427,15 +455,99 @@
       imageArea.appendChild(imageContainer);
 
       // Ảnh có thể zoom
-      const img = document.createElement('img');
+      // const img = document.createElement('img');
+      // img.src = `images/${imgName}`;
+      // img.className = 'zoomable-image';
+      // img.alt = imgName;
+      // img.onerror = function() {
+      //   errorMsg.textContent = 'Không tìm thấy ảnh hoặc ảnh bị lỗi!';
+      //   img.style.display = 'none';
+      // };
+      // imageContainer.appendChild(img);
+      // Sử dụng canvas thay cho img để xử lý shadow
+      const canvas = document.createElement('canvas');
+      canvas.width = 800;
+      canvas.height = 600;
+      canvas.className = 'zoomable-image';
+      canvas.style.maxWidth = '100%';
+      canvas.style.maxHeight = '100%';
+      imageContainer.appendChild(canvas);
+      const ctx = canvas.getContext('2d');
+      const img = new window.Image();
+      img.crossOrigin = 'anonymous';
       img.src = `images/${imgName}`;
-      img.className = 'zoomable-image';
-      img.alt = imgName;
+      img.onload = function() {
+        // Fit ảnh vào canvas
+        let scale = Math.min(canvas.width/img.width, canvas.height/img.height);
+        let w = img.width * scale;
+        let h = img.height * scale;
+        let x = (canvas.width-w)/2;
+        let y = (canvas.height-h)/2;
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.drawImage(img, x, y, w, h);
+        applyAllEdits();
+      };
       img.onerror = function() {
         errorMsg.textContent = 'Không tìm thấy ảnh hoặc ảnh bị lỗi!';
-        img.style.display = 'none';
+        canvas.style.display = 'none';
       };
-      imageContainer.appendChild(img);
+
+      // Hiển thị bộ chỉnh sửa ảnh
+      document.getElementById('editControls').style.display = '';
+      // Xử lý filter
+      const brightnessSlider = document.getElementById('brightnessSlider');
+      const contrastSlider = document.getElementById('contrastSlider');
+      const saturateSlider = document.getElementById('saturateSlider');
+      const shadowSlider = document.getElementById('shadowSlider');
+      const brightnessValue = document.getElementById('brightnessValue');
+      const contrastValue = document.getElementById('contrastValue');
+      const saturateValue = document.getElementById('saturateValue');
+      const shadowValue = document.getElementById('shadowValue');
+      function applyAllEdits() {
+        // Vẽ lại ảnh gốc
+        let scale = Math.min(canvas.width/img.width, canvas.height/img.height);
+        let w = img.width * scale;
+        let h = img.height * scale;
+        let x = (canvas.width-w)/2;
+        let y = (canvas.height-h)/2;
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.drawImage(img, x, y, w, h);
+        // Lấy pixel
+        let imageData = ctx.getImageData(x, y, w, h);
+        let data = imageData.data;
+        // Tăng sáng vùng tối
+        let shadow = parseInt(shadowSlider.value);
+        if (shadow > 0) {
+          for (let i = 0; i < data.length; i += 4) {
+            // Tính độ sáng pixel (giá trị trung bình RGB)
+            let avg = (data[i] + data[i+1] + data[i+2]) / 3;
+            if (avg < 128) {
+              // Tăng sáng cho vùng tối
+              data[i] = Math.min(255, data[i] + shadow);
+              data[i+1] = Math.min(255, data[i+1] + shadow);
+              data[i+2] = Math.min(255, data[i+2] + shadow);
+            }
+          }
+          ctx.putImageData(imageData, x, y);
+        }
+        // Áp dụng filter CSS cho canvas
+        const b = brightnessSlider.value;
+        const c = contrastSlider.value;
+        const s = saturateSlider.value;
+        canvas.style.filter = `brightness(${b}%) contrast(${c}%) saturate(${s}%)`;
+        brightnessValue.textContent = b + '%';
+        contrastValue.textContent = c + '%';
+        saturateValue.textContent = s + '%';
+        shadowValue.textContent = shadow + '%';
+      }
+      brightnessSlider.oninput = contrastSlider.oninput = saturateSlider.oninput = shadowSlider.oninput = applyAllEdits;
+      document.getElementById('resetEditBtn').onclick = function() {
+        brightnessSlider.value = 100;
+        contrastSlider.value = 100;
+        saturateSlider.value = 100;
+        shadowSlider.value = 0;
+        applyAllEdits();
+      };
 
       // Biến để theo dõi mức zoom và vị trí cuộn
       let currentZoom = 1;
@@ -570,7 +682,7 @@
             break;
         }
       });
-
+      
       // Tạo nút tải xuống
       const downloadBtn = document.createElement('a');
       downloadBtn.href = `images/${imgName}`;
@@ -578,7 +690,7 @@
       downloadBtn.className = 'download-btn';
       downloadBtn.textContent = '📥 Tải xuống ảnh';
       buttonArea.appendChild(downloadBtn);
-
+      
       // Tạo nút xem ảnh gốc
       const originalBtn = document.createElement('a');
       originalBtn.href = `images/${imgName}`;

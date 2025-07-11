@@ -623,3 +623,56 @@ function loadImages(list) {
     gallery.appendChild(img);
   });
 }
+
+// Mini Game logic
+let miniGameState = {
+  image: '',
+  covers: [true, true, true, true],
+  level: 1,
+  maxLevel: 4,
+  isPlaying: false
+};
+
+function openMiniGame() {
+  // Chọn ảnh ngẫu nhiên
+  const randomImg = imageNames[Math.floor(Math.random() * imageNames.length)];
+  miniGameState.image = randomImg;
+  miniGameState.covers = [true, true, true, true];
+  miniGameState.level = 1;
+  miniGameState.isPlaying = true;
+  // Hiển thị modal
+  document.getElementById('miniGameModal').style.display = 'flex';
+  document.getElementById('miniGameImage').src = `images/${randomImg}`;
+  // Hiển thị lại các ô che
+  for (let i = 0; i < 4; i++) {
+    document.getElementById('coverBlock' + i).style.display = 'block';
+  }
+  document.getElementById('miniGameLevel').textContent = miniGameState.level;
+  document.getElementById('miniGameCovers').textContent = miniGameState.covers.filter(x=>x).length;
+  document.getElementById('miniGameMessage').textContent = '';
+  // Khởi tạo game hứng đồ rơi (sẽ bổ sung sau)
+  initMiniGameLevel();
+}
+
+function closeMiniGame() {
+  document.getElementById('miniGameModal').style.display = 'none';
+  miniGameState.isPlaying = false;
+}
+
+// Gắn sự kiện cho nút
+window.addEventListener('DOMContentLoaded', function() {
+  const miniGameBtn = document.getElementById('miniGameBtn');
+  if (miniGameBtn) miniGameBtn.onclick = function() {
+    window.location.href = 'minigame.html';
+  };
+});
+
+// Khởi tạo game hứng đồ rơi (placeholder)
+function initMiniGameLevel() {
+  const ctx = document.getElementById('miniGameCanvas').getContext('2d');
+  ctx.clearRect(0, 0, 320, 320);
+  ctx.fillStyle = '#667eea';
+  ctx.font = 'bold 24px Inter, Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('Mini game sẽ xuất hiện ở đây!', 160, 160);
+}
