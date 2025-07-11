@@ -31,6 +31,7 @@
         <button id="showFavoritesBtn">❤️ Xem ảnh yêu thích</button>
         <button id="slideshowBtn">🎬 Slideshow tự động</button>
         <button id="statsBtn">📊 Thống kê gallery</button>
+        <button id="miniGameBtn">🕹️ Mini Game</button>
       </div>
       <div class="theme-toggle">
         <button id="themeToggle" class="theme-btn">
@@ -71,6 +72,28 @@
       <h2>📊 Thống kê Gallery</h2>
       <div id="statsInfo"></div>
       <button id="closeStatsBtn">Đóng</button>
+    </div>
+  </div>
+
+  <!-- Mini Game Modal -->
+  <div id="miniGameModal" style="display: none;">
+    <div id="miniGameContent">
+      <h2 style="text-align:center; margin-bottom: 10px;">🕹️ Mini Game: Mở Ảnh Bí Ẩn</h2>
+      <div id="miniGameStage" style="display: flex; flex-direction: column; align-items: center; gap: 20px;">
+        <div id="miniGameImageArea" style="position: relative; width: 320px; height: 220px; margin-bottom: 10px;">
+          <img id="miniGameImage" src="" alt="Ảnh bí ẩn" style="width: 100%; height: 100%; object-fit: cover; border-radius: 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.2);">
+          <div id="coverBlock0" class="mini-cover-block" style="position: absolute; top:0; left:0; width:50%; height:50%; background:rgba(0,0,0,0.7); border-radius: 18px 0 0 0;"></div>
+          <div id="coverBlock1" class="mini-cover-block" style="position: absolute; top:0; right:0; width:50%; height:50%; background:rgba(0,0,0,0.7); border-radius: 0 18px 0 0;"></div>
+          <div id="coverBlock2" class="mini-cover-block" style="position: absolute; bottom:0; left:0; width:50%; height:50%; background:rgba(0,0,0,0.7); border-radius: 0 0 0 18px;"></div>
+          <div id="coverBlock3" class="mini-cover-block" style="position: absolute; bottom:0; right:0; width:50%; height:50%; background:rgba(0,0,0,0.7); border-radius: 0 0 18px 0;"></div>
+        </div>
+        <div id="miniGameLevelInfo" style="font-size: 1.1rem; margin-bottom: 5px;">Bàn: <span id="miniGameLevel">1</span> | Ô che còn lại: <span id="miniGameCovers">4</span></div>
+        <div id="miniGameCanvasArea" style="width: 320px; height: 320px; display: flex; align-items: center; justify-content: center;">
+          <canvas id="miniGameCanvas" width="320" height="320" style="background: #f5f5f5; border-radius: 18px; box-shadow: 0 4px 16px rgba(0,0,0,0.1);"></canvas>
+        </div>
+        <div id="miniGameMessage" style="font-size: 1.1rem; color: #1976d2; min-height: 24px; text-align: center;"></div>
+        <button id="miniGameCloseBtn" style="margin-top: 10px; padding: 12px 30px; border-radius: 12px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; font-size: 1rem; font-weight: 600; cursor: pointer;">Đóng</button>
+      </div>
     </div>
   </div>
 
